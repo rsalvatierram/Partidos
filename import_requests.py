@@ -62,17 +62,8 @@ for p in partidos:
                         allowfullscreen></iframe>
                 """, unsafe_allow_html=True)
 
-                # Hack de WSUnmute: botón JS
-                st.markdown("""
-                    <script>
-                        window.WSUnmute = function(){ console.log("WSUnmute bloqueado en Streamlit ✔"); };
-                        function activarAudio(){
-                            try { WSUnmute(); console.log("Intentando unmute ✔"); }
-                            catch(e){ console.log("Error unmute:", e); }
-                        }
-                    </script>
-                    <button onclick="activarAudio()">🔊 Activar Audio</button>
-                """, unsafe_allow_html=True)
+             
 
             else:
                 st.warning("⚠️ No se encontró iframe con el video.")
+
