@@ -2,6 +2,9 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
+# ========================
+# PARTE 1: Scraping Partidos
+# ========================
 def obtener_partidos():
     url = "https://www.rojadirectaenvivo.pl/programacion.php"
     headers = {
@@ -30,7 +33,9 @@ def obtener_partidos():
     return partidos
 
 
-# === INTERFAZ STREAMLIT ===
+# ========================
+# INTERFAZ STREAMLIT
+# ========================
 st.title("📺 Partidos y Canales")
 
 partidos = obtener_partidos()
@@ -38,4 +43,36 @@ partidos = obtener_partidos()
 for p in partidos:
     st.subheader(p["partido"])
     for c in p["canales"]:
-        st.markdown(f"[{c['nombre']}]({c['url']})")
+        if st.button(f"▶️ {c['nombre']}", key=f"{p['partido']}_{c['nombre']}"):
+            # Obtener el enlace del canal al hacer clic
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            response = requests.get(c["url"], headers=headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+            iframe = soup.find("iframe")
+
+            if iframe:
+                video_url = iframe.get("src")
+
+                # Insertar el iframe del video en Streamlit
+                st.markdown(f"""
+                    <iframe src="{video_url}" width="100%" height="600" 
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        allowfullscreen></iframe>
+                """, unsafe_allow_html=True)
+
+                # Hack de WSUnmute: botón JS
+                st.markdown("""
+                    <script>
+                        window.WSUnmute = function(){ console.log("WSUnmute bloqueado en Streamlit ✔"); };
+                        function activarAudio(){
+                            try { WSUnmute(); console.log("Intentando unmute ✔"); }
+                            catch(e){ console.log("Error unmute:", e); }
+                        }
+                    </script>
+                    <button onclick="activarAudio()">🔊 Activar Audio</button>
+                """, unsafe_allow_html=True)
+
+            else:
+                st.warning("⚠️ No se encontró iframe con el video.")
