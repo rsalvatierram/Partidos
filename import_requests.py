@@ -60,13 +60,54 @@ partidos = obtener_partidos()
 # CSS
 st.markdown("""
 <style>
-.partido-btn { width: 100%; text-align: left; font-size: 18px; background-color: #1E90FF; color: #fff; border: none; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; }
-.partido-btn:hover { background-color: #1C86EE; transform: translateY(-2px); }
-.canal-btn { width: 95%; text-align: left; font-size: 16px; background-color: #87CEFA; color: #000; border: none; border-radius: 8px; padding: 10px; margin-bottom: 5px; cursor: pointer; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
-.canal-btn:hover { background-color: #00BFFF; color: #fff; }
-.iframe-container { width: 100%; height: 500px; margin-top: 10px; border-radius: 12px; overflow: hidden; box-shadow: 0px 4px 8px rgba(0,0,0,0.2); }
+.partido-btn {
+    width: 100%;
+    text-align: left;
+    font-size: 18px;
+    background-color: #1E90FF;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 5px;  /* menos margen inferior */
+    cursor: pointer;
+    box-shadow: 0px 3px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+.partido-btn:hover {
+    background-color: #1C86EE;
+    transform: translateY(-1px);
+}
+.canal-btn {
+    width: 90%;
+    text-align: left;
+    font-size: 15px;
+    background-color: #87CEFA;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 5px;   /* menos padding */
+    margin: 2px auto; /* margen más pequeño arriba y abajo */
+    display: block;
+    cursor: pointer;
+    box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+.canal-btn:hover {
+    background-color: #00BFFF;
+    color: #fff;
+}
+.iframe-container {
+    width: 100%;
+    height: 450px;
+    margin-top: 5px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 # Mostrar partidos y canales
 for p in partidos:
@@ -118,3 +159,4 @@ for p in partidos:
                         else:
                             st.warning("⚠️ No se encontró iframe con el video.")
         st.markdown("</div>", unsafe_allow_html=True)
+
