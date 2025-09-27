@@ -62,8 +62,10 @@ st.markdown("""
 <style>
 .partido-btn { width: 100%; text-align: left; font-size: 18px; background-color: #1E90FF; color: #fff; border: none; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; }
 .partido-btn:hover { background-color: #1C86EE; transform: translateY(-2px); }
-.canal-btn { width: 90%; text-align: left; font-size: 16px; background-color: #87CEFA; color: #000; border: none; border-radius: 8px; padding: 10px;margin: 5px auto; display: block; cursor: pointer; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+
+.canal-btn { width: 90%; text-align: left; font-size: 16px; background-color: #87CEFA; color: #000; border: none; border-radius: 8px; padding: 10px; margin: 5px auto; display: block; cursor: pointer; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
 .canal-btn:hover { background-color: #00BFFF; color: #fff; }
+
 .iframe-container { width: 100%; height: 500px; margin-top: 10px; border-radius: 12px; overflow: hidden; box-shadow: 0px 4px 8px rgba(0,0,0,0.2); }
 </style>
 """, unsafe_allow_html=True)
@@ -118,6 +120,7 @@ for p in partidos:
                         else:
                             st.warning("⚠️ No se encontró iframe con el video.")
         st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
