@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 def obtener_partidos():
     url = "https://www.rojadirectaenvivo.pl/programacion.php"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
     response = requests.get(url, headers=headers)
     response.encoding = "utf-8"
@@ -16,30 +16,22 @@ def obtener_partidos():
 
     partidos = []
     for li in soup.select("ul.menu > li"):
-        partido_info = {}
-
-        # El primer enlace es el título del partido
-        titulo_link = li.find("a", recursive=False)  # <- solo el primer <a> directo, no los hijos
+        titulo_link = li.find("a", recursive=False)
         if not titulo_link:
             continue
-        partido_info["partido"] = titulo_link.get_text(" ", strip=True)
 
-        # Los demás <a> son los canales
-        canales = []
+        partido_info = {"partido": titulo_link.get_text(" ", strip=True), "canales": []}
+
         canales_links = li.select("ul li a")
-        
-        # Saltar el primer canal
-        for canal in canales_links[1:]:
-            canales.append({
+        for canal in canales_links[1:]:  # 🔥 omitir el primero que repite el título
+            partido_info["canales"].append({
                 "nombre": canal.get_text(strip=True),
                 "url": canal.get("href")
             })
 
-        partido_info["canales"] = canales
         partidos.append(partido_info)
 
     return partidos
-
 
 
 # ========================
@@ -50,34 +42,33 @@ st.title("📺 Partidos y Canales")
 partidos = obtener_partidos()
 
 for p in partidos:
-    st.subheader(p["partido"])
-    for c in p["canales"]:
-        if st.button(f"▶️ {c['nombre']}", key=f"{p['partido']}_{c['nombre']}"):
-            # Obtener el enlace del canal al hacer clic
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            }
-            response = requests.get(c["url"], headers=headers)
+    with st.expander(p["partido"]):  # 🔥 desplegable por partido
+        if not p["canales"]:
+            st.write("⚠️ No hay canales disponibles.")
+            continue
+
+        # Menú de selección de canal
+        canal_seleccionado = st.radio(
+            f"Canales disponibles para {p['partido']}:",
+            options=[c["nombre"] for c in p["canales"]],
+            key=p["partido"]
+        )
+
+        if canal_seleccionado:
+            canal_url = next(c["url"] for c in p["canales"] if c["nombre"] == canal_seleccionado)
+            
+            # Scraping del enlace del canal
+            headers = {"User-Agent": "Mozilla/5.0"}
+            response = requests.get(canal_url, headers=headers)
             soup = BeautifulSoup(response.text, "html.parser")
             iframe = soup.find("iframe")
 
             if iframe:
                 video_url = iframe.get("src")
-
-                # Insertar el iframe del video en Streamlit
                 st.markdown(f"""
-                    <iframe src="{video_url}" width="100%" height="600" 
+                    <iframe src="{video_url}" width="100%" height="600"
                         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                         allowfullscreen></iframe>
                 """, unsafe_allow_html=True)
-
-             
-
             else:
                 st.warning("⚠️ No se encontró iframe con el video.")
-
-
-
-
-
-
