@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # ========================
-# PARTE 1: Scraping Partidos
+# Scraping Partidos
 # ========================
 def obtener_partidos():
     url = "https://www.rojadirectaenvivo.pl/programacion.php"
@@ -40,11 +40,10 @@ def obtener_partidos():
     return partidos
 
 # ========================
-# PARTE 2: INTERFAZ STREAMLIT
+# INTERFAZ STREAMLIT
 # ========================
 st.set_page_config(page_title="📺 Partidos en Vivo", layout="wide")
 
-# Encabezado profesional
 st.markdown("""
 <h1 style='text-align:center; color:#1E90FF; font-family: "Segoe UI", sans-serif;'>📺 Partidos y Canales en Vivo</h1>
 <hr style='border:2px solid #1E90FF; margin-bottom:20px;'>
@@ -54,14 +53,13 @@ st.markdown("""
 if "partido_abierto" not in st.session_state:
     st.session_state.partido_abierto = None
 if "canal_abierto" not in st.session_state:
-    st.session_state.canal_abierto = None
+    st.session_state.canal_abierto = None  # Estado único global para un canal abierto
 
 partidos = obtener_partidos()
 
-# CSS profesional
+# CSS
 st.markdown("""
 <style>
-body { font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; }
 .partido-btn { width: 100%; text-align: left; font-size: 18px; background-color: #1E90FF; color: #fff; border: none; border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1); transition: all 0.3s ease; }
 .partido-btn:hover { background-color: #1C86EE; transform: translateY(-2px); }
 .canal-btn { width: 95%; text-align: left; font-size: 16px; background-color: #87CEFA; color: #000; border: none; border-radius: 8px; padding: 10px; margin-bottom: 5px; cursor: pointer; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
@@ -74,17 +72,17 @@ body { font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; }
 for p in partidos:
     # Botón partido
     if st.button(f"⚽ {p['partido']}", key=f"partido_{p['partido']}"):
-        # Abrir solo este partido
+        # Alternar partido abierto
         if st.session_state.partido_abierto == p["partido"]:
             st.session_state.partido_abierto = None
             st.session_state.canal_abierto = None
         else:
             st.session_state.partido_abierto = p["partido"]
-            st.session_state.canal_abierto = None  # cerrar cualquier canal abierto anterior
+            st.session_state.canal_abierto = None  # cerrar canal abierto anterior
 
-    # Desplegar solo si es el seleccionado
+    # Desplegar solo si es el partido abierto
     if st.session_state.partido_abierto == p["partido"]:
-        st.markdown(f"<div style='background-color:#fff; padding:15px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.1); margin-bottom:20px;'>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background-color:#fff; padding:15px; border-radius:15px; margin-bottom:20px;'>", unsafe_allow_html=True)
         st.markdown(f"<h4 style='color:#1E90FF;'>Canales de {p['partido']}</h4>", unsafe_allow_html=True)
 
         if not p["canales"]:
@@ -95,14 +93,15 @@ for p in partidos:
                 if c["badge"] == "HD": badge = "🟢HD"
                 elif c["badge"] == "LIVE": badge = "🔴LIVE"
 
+                # Botón canal
                 if st.button(f"▶️ {c['nombre']} {badge}", key=f"canal_{p['partido']}_{c['nombre']}"):
-                    # Al seleccionar cualquier canal, cerramos el anterior y abrimos este
+                    # Al hacer click, reemplaza el canal abierto global
                     st.session_state.canal_abierto = {"partido": p["partido"], "nombre": c["nombre"], "url": c["url"]}
 
-                # Mostrar video solo si es el canal seleccionado
+                # Mostrar video solo si coincide con el canal abierto global
                 if st.session_state.canal_abierto:
                     canal = st.session_state.canal_abierto
-                    if canal["nombre"] == c["nombre"] and canal["partido"] == p["partido"]:
+                    if canal["partido"] == p["partido"] and canal["nombre"] == c["nombre"]:
                         headers = {"User-Agent": "Mozilla/5.0"}
                         response = requests.get(canal["url"], headers=headers)
                         soup = BeautifulSoup(response.text, "html.parser")
