@@ -26,7 +26,7 @@ def obtener_partidos():
 
         # Los demás <a> son los canales
         canales = []
-        for canal in li.select("ul li a"):
+        for canal in li.select("ul li "):
             canales.append({
                 "nombre": canal.get_text(strip=True),
                 "url": canal.get("href")
@@ -72,5 +72,6 @@ for p in partidos:
 
             else:
                 st.warning("⚠️ No se encontró iframe con el video.")
+
 
 
