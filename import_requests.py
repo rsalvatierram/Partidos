@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # ========================
-# Scraping Partidos
+# PARTE 1: Scraping Partidos
 # ========================
 def obtener_partidos():
     url = "https://www.rojadirectaenvivo.pl/programacion.php"
@@ -19,24 +19,28 @@ def obtener_partidos():
             continue
 
         partido_info = {"partido": titulo_link.get_text(" ", strip=True), "canales": []}
+
         canales_links = li.select("ul li a")
-        for canal in canales_links[1:]:  # Omitir primer enlace (repite el título)
+        for canal in canales_links[1:]:  # omitir el primero (repite el título)
             nombre = canal.get_text(strip=True)
             badge = ""
             if "HD" in nombre.upper():
                 badge = "HD"
             elif "LIVE" in nombre.upper():
                 badge = "LIVE"
+
             partido_info["canales"].append({
                 "nombre": nombre,
                 "url": canal.get("href"),
                 "badge": badge
             })
+
         partidos.append(partido_info)
+
     return partidos
 
 # ========================
-# INTERFAZ STREAMLIT
+# PARTE 2: INTERFAZ STREAMLIT
 # ========================
 st.set_page_config(page_title="📺 Partidos en Vivo", layout="wide")
 
@@ -48,8 +52,8 @@ st.markdown("""
 # Estados
 if "partido_abierto" not in st.session_state:
     st.session_state.partido_abierto = None
-if "canal_abierto" not in st.session_state:
-    st.session_state.canal_abierto = None  # solo un canal abierto a la vez
+if "canal_abierto_por_partido" not in st.session_state:
+    st.session_state.canal_abierto_por_partido = {}
 
 partidos = obtener_partidos()
 
@@ -71,10 +75,8 @@ for p in partidos:
     if st.button(f"⚽ {p['partido']}", key=f"partido_{p['partido']}"):
         if st.session_state.partido_abierto == p["partido"]:
             st.session_state.partido_abierto = None
-            st.session_state.canal_abierto = None
         else:
             st.session_state.partido_abierto = p["partido"]
-            st.session_state.canal_abierto = None
 
     # Desplegar solo si es el seleccionado
     if st.session_state.partido_abierto == p["partido"]:
@@ -90,15 +92,14 @@ for p in partidos:
                 elif c["badge"] == "LIVE": badge = "🔴LIVE"
 
                 if st.button(f"▶️ {c['nombre']} {badge}", key=f"canal_{p['partido']}_{c['nombre']}"):
-                    # Abrir solo este canal
-                    st.session_state.canal_abierto = {"partido": p["partido"], "canal": c}
+                    st.session_state.canal_abierto_por_partido[p["partido"]] = c
 
                 # Mostrar video debajo del canal seleccionado
-                if st.session_state.canal_abierto and st.session_state.canal_abierto["partido"] == p["partido"]:
-                    canal_abierto = st.session_state.canal_abierto["canal"]
-                    if canal_abierto["nombre"] == c["nombre"]:
+                if p["partido"] in st.session_state.canal_abierto_por_partido:
+                    canal = st.session_state.canal_abierto_por_partido[p["partido"]]
+                    if canal["nombre"] == c["nombre"]:
                         headers = {"User-Agent": "Mozilla/5.0"}
-                        response = requests.get(canal_abierto["url"], headers=headers)
+                        response = requests.get(canal["url"], headers=headers)
                         soup = BeautifulSoup(response.text, "html.parser")
                         iframe = soup.find("iframe")
                         if iframe:
