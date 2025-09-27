@@ -42,7 +42,7 @@ st.set_page_config(page_title="📺 Partidos en Vivo", layout="wide")
 if "partido_abierto" not in st.session_state:
     st.session_state.partido_abierto = None
 if "canal_abierto" not in st.session_state:
-    st.session_state.canal_abierto = None
+    st.session_state.canal_abierto = None  # guardará {"partido":..., "nombre":...}
 
 st.markdown("<h1 style='text-align:center; color:#1E90FF;'>📺 Partidos y Canales en Vivo</h1><hr>", unsafe_allow_html=True)
 
@@ -65,19 +65,24 @@ for p in partidos:
     if st.button(f"⚽ {p['partido']}", key=f"partido_{p['partido']}"):
         if st.session_state.partido_abierto == p["partido"]:
             st.session_state.partido_abierto = None
-            st.session_state.canal_abierto = None
+            st.session_state.canal_abierto = None  # cerrar canal
         else:
             st.session_state.partido_abierto = p["partido"]
-            st.session_state.canal_abierto = None  # cerrar cualquier canal
+            st.session_state.canal_abierto = None  # cerrar canal al cambiar partido
 
     if st.session_state.partido_abierto == p["partido"]:
         st.markdown(f"<div style='background-color:#fff; padding:15px; border-radius:15px; margin-bottom:20px;'>", unsafe_allow_html=True)
         for c in p["canales"]:
             badge = "🟢HD" if c["badge"]=="HD" else "🔴LIVE" if c["badge"]=="LIVE" else ""
             if st.button(f"▶️ {c['nombre']} {badge}", key=f"canal_{p['partido']}_{c['nombre']}"):
-                st.session_state.canal_abierto = c  # abrir solo este canal
-            # Mostrar iframe solo para el canal actualmente abierto
-            if st.session_state.canal_abierto == c:
+                # Al hacer clic en un canal, se cierra automáticamente cualquier otro
+                st.session_state.canal_abierto = {"partido": p["partido"], "nombre": c["nombre"], "url": c["url"]}
+
+            # Mostrar iframe solo si coincide el canal abierto
+            if st.session_state.canal_abierto and \
+               st.session_state.canal_abierto["partido"] == p["partido"] and \
+               st.session_state.canal_abierto["nombre"] == c["nombre"]:
+
                 response = requests.get(c["url"], headers={"User-Agent": "Mozilla/5.0"})
                 soup = BeautifulSoup(response.text, "html.parser")
                 iframe = soup.find("iframe")
