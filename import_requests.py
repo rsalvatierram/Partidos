@@ -45,13 +45,15 @@ st.markdown("""
 <hr style='border:2px solid #1E90FF; margin-bottom:20px;'>
 """, unsafe_allow_html=True)
 
-# Estado global: solo un canal abierto a la vez
+# Estados
+if "partido_abierto" not in st.session_state:
+    st.session_state.partido_abierto = None
 if "canal_abierto" not in st.session_state:
-    st.session_state.canal_abierto = None
+    st.session_state.canal_abierto = None  # solo un canal abierto a la vez
 
 partidos = obtener_partidos()
 
-# CSS profesional
+# CSS
 st.markdown("""
 <style>
 body { font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; }
@@ -65,32 +67,49 @@ body { font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; }
 
 # Mostrar partidos y canales
 for p in partidos:
-    st.markdown(f"<h3 style='color:#1E90FF; margin-top:15px;'>{p['partido']}</h3>", unsafe_allow_html=True)
+    # Botón partido
+    if st.button(f"⚽ {p['partido']}", key=f"partido_{p['partido']}"):
+        if st.session_state.partido_abierto == p["partido"]:
+            st.session_state.partido_abierto = None
+            st.session_state.canal_abierto = None
+        else:
+            st.session_state.partido_abierto = p["partido"]
+            st.session_state.canal_abierto = None
 
-    for c in p["canales"]:
-        badge = ""
-        if c["badge"] == "HD": badge = "🟢HD"
-        elif c["badge"] == "LIVE": badge = "🔴LIVE"
+    # Desplegar solo si es el seleccionado
+    if st.session_state.partido_abierto == p["partido"]:
+        st.markdown(f"<div style='background-color:#fff; padding:15px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.1); margin-bottom:20px;'>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='color:#1E90FF;'>Canales de {p['partido']}</h4>", unsafe_allow_html=True)
 
-        if st.button(f"▶️ {c['nombre']} {badge}", key=f"canal_{p['partido']}_{c['nombre']}"):
-            # Abrir solo este canal y cerrar cualquier otro
-            st.session_state.canal_abierto = {"partido": p["partido"], "canal": c}
+        if not p["canales"]:
+            st.write("⚠️ No hay canales disponibles.")
+        else:
+            for c in p["canales"]:
+                badge = ""
+                if c["badge"] == "HD": badge = "🟢HD"
+                elif c["badge"] == "LIVE": badge = "🔴LIVE"
 
-        # Mostrar video debajo del canal seleccionado
-        if st.session_state.canal_abierto and st.session_state.canal_abierto["canal"]["nombre"] == c["nombre"]:
-            canal_abierto = st.session_state.canal_abierto["canal"]
-            headers = {"User-Agent": "Mozilla/5.0"}
-            response = requests.get(canal_abierto["url"], headers=headers)
-            soup = BeautifulSoup(response.text, "html.parser")
-            iframe = soup.find("iframe")
-            if iframe:
-                video_url = iframe.get("src")
-                st.markdown(f"""
-                    <div class="iframe-container">
-                        <iframe src="{video_url}" width="100%" height="100%"
-                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                            allowfullscreen></iframe>
-                    </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ No se encontró iframe con el video.")
+                if st.button(f"▶️ {c['nombre']} {badge}", key=f"canal_{p['partido']}_{c['nombre']}"):
+                    # Abrir solo este canal
+                    st.session_state.canal_abierto = {"partido": p["partido"], "canal": c}
+
+                # Mostrar video debajo del canal seleccionado
+                if st.session_state.canal_abierto and st.session_state.canal_abierto["partido"] == p["partido"]:
+                    canal_abierto = st.session_state.canal_abierto["canal"]
+                    if canal_abierto["nombre"] == c["nombre"]:
+                        headers = {"User-Agent": "Mozilla/5.0"}
+                        response = requests.get(canal_abierto["url"], headers=headers)
+                        soup = BeautifulSoup(response.text, "html.parser")
+                        iframe = soup.find("iframe")
+                        if iframe:
+                            video_url = iframe.get("src")
+                            st.markdown(f"""
+                                <div class="iframe-container">
+                                    <iframe src="{video_url}" width="100%" height="100%"
+                                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                                        allowfullscreen></iframe>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.warning("⚠️ No se encontró iframe con el video.")
+        st.markdown("</div>", unsafe_allow_html=True)
