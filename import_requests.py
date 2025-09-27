@@ -22,9 +22,18 @@ def obtener_partidos():
 
         canales_links = li.select("ul li a")
         for canal in canales_links[1:]:  # omitir el primero (repite el título)
+            # Detectar si tiene HD o LIVE en el nombre
+            nombre = canal.get_text(strip=True)
+            badge = ""
+            if "HD" in nombre.upper():
+                badge = "HD"
+            elif "LIVE" in nombre.upper():
+                badge = "LIVE"
+
             partido_info["canales"].append({
-                "nombre": canal.get_text(strip=True),
-                "url": canal.get("href")
+                "nombre": nombre,
+                "url": canal.get("href"),
+                "badge": badge
             })
 
         partidos.append(partido_info)
@@ -34,11 +43,9 @@ def obtener_partidos():
 # ========================
 # INTERFAZ STREAMLIT
 # ========================
-
 st.set_page_config(page_title="📺 Partidos en Vivo", layout="wide")
 st.markdown("<h1 style='text-align:center; color:#FF5733;'>📺 Partidos y Canales en Vivo</h1>", unsafe_allow_html=True)
 
-# Inicializar estado
 if "partido_abierto" not in st.session_state:
     st.session_state.partido_abierto = None
 if "canal_abierto" not in st.session_state:
@@ -46,7 +53,7 @@ if "canal_abierto" not in st.session_state:
 
 partidos = obtener_partidos()
 
-# Estilos CSS para los botones y contenedores
+# CSS para estilos llamativos
 st.markdown("""
 <style>
 .partido-btn {
@@ -73,11 +80,21 @@ st.markdown("""
     margin-bottom: 3px;
     cursor: pointer;
 }
+.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: white;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+.badge-hd { background-color: #28a745; }
+.badge-live { background-color: #dc3545; }
 </style>
 """, unsafe_allow_html=True)
 
+# Mostrar partidos y canales
 for p in partidos:
-    # Botón del partido
     if st.button(f"⚽ {p['partido']}", key=f"partido_{p['partido']}"):
         if st.session_state.partido_abierto == p["partido"]:
             st.session_state.partido_abierto = None
@@ -86,7 +103,6 @@ for p in partidos:
             st.session_state.partido_abierto = p["partido"]
             st.session_state.canal_abierto = None
 
-    # Mostrar los canales SOLO si este partido está abierto
     if st.session_state.partido_abierto == p["partido"]:
         st.markdown(f"<div style='background-color:#f0f0f0; padding:10px; border-radius:10px; margin-bottom:15px;'>", unsafe_allow_html=True)
         st.markdown(f"<h4 style='color:#FF5733;'>Canales de {p['partido']}</h4>", unsafe_allow_html=True)
@@ -95,10 +111,15 @@ for p in partidos:
             st.write("⚠️ No hay canales disponibles.")
         else:
             for c in p["canales"]:
-                if st.button(f"▶️ {c['nombre']}", key=f"canal_{p['partido']}_{c['nombre']}"):
+                badge_html = ""
+                if c["badge"] == "HD":
+                    badge_html = '<span class="badge badge-hd">HD</span>'
+                elif c["badge"] == "LIVE":
+                    badge_html = '<span class="badge badge-live">LIVE</span>'
+
+                if st.button(f"▶️ {c['nombre']} {badge_html}", key=f"canal_{p['partido']}_{c['nombre']}", unsafe_allow_html=True):
                     st.session_state.canal_abierto = c
 
-            # Mostrar iframe del canal abierto
             if st.session_state.canal_abierto:
                 canal = st.session_state.canal_abierto
                 headers = {"User-Agent": "Mozilla/5.0"}
