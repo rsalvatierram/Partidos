@@ -1,5 +1,4 @@
 streamlit
 requests
 beautifulsoup4
-streamlit_webrtc 
-webrtc_streamer
+streamlit-webrtc
