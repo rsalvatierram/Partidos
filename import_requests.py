@@ -45,7 +45,7 @@ def obtener_partidos():
 st.set_page_config(page_title="📺 Partidos en Vivo", layout="wide")
 
 st.markdown("""
-<h1 style='text-align:center; color:#1E90FF; font-family: "Segoe UI", sans-serif;'>📺 Programacion Partidos y Canales en Vivo</h1>
+<h1 style='text-align:center; color:#1E90FF; font-family: "Segoe UI", sans-serif;'>📺 Programación de Partidos y Canales en Vivo</h1>
 <hr style='border:2px solid #1E90FF; margin-bottom:20px;'>
 """, unsafe_allow_html=True)
 
@@ -118,4 +118,5 @@ for p in partidos:
                         else:
                             st.warning("⚠️ No se encontró iframe con el video.")
         st.markdown("</div>", unsafe_allow_html=True)
+
 
