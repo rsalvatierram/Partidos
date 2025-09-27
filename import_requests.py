@@ -17,9 +17,14 @@ def obtener_partidos():
     partidos = []
     for li in soup.select("ul.menu > li"):
         partido_info = {}
-        titulo = li.find("a").get_text(" ", strip=True)
-        partido_info["partido"] = titulo
 
+        # El primer enlace es el título del partido
+        titulo_link = li.find("a", recursive=False)  # <- solo el primer <a> directo, no los hijos
+        if not titulo_link:
+            continue
+        partido_info["partido"] = titulo_link.get_text(" ", strip=True)
+
+        # Los demás <a> son los canales
         canales = []
         for canal in li.select("ul li a"):
             canales.append({
@@ -31,6 +36,7 @@ def obtener_partidos():
         partidos.append(partido_info)
 
     return partidos
+
 
 
 # ========================
@@ -66,4 +72,5 @@ for p in partidos:
 
             else:
                 st.warning("⚠️ No se encontró iframe con el video.")
+
 
