@@ -41,34 +41,39 @@ st.title("📺 Partidos y Canales")
 
 partidos = obtener_partidos()
 
-for p in partidos:
-    with st.expander(p["partido"]):  # 🔥 desplegable por partido
-        if not p["canales"]:
-            st.write("⚠️ No hay canales disponibles.")
-            continue
+# Lista de partidos para selección
+partido_nombres = [p["partido"] for p in partidos]
+partido_seleccionado = st.selectbox("Selecciona un partido:", partido_nombres)
 
-        # Menú de selección de canal
-        canal_seleccionado = st.radio(
-            f"Canales disponibles para {p['partido']}:",
-            options=[c["nombre"] for c in p["canales"]],
-            key=p["partido"]
-        )
+# Buscar el partido elegido
+partido = next(p for p in partidos if p["partido"] == partido_seleccionado)
 
-        if canal_seleccionado:
-            canal_url = next(c["url"] for c in p["canales"] if c["nombre"] == canal_seleccionado)
-            
-            # Scraping del enlace del canal
-            headers = {"User-Agent": "Mozilla/5.0"}
-            response = requests.get(canal_url, headers=headers)
-            soup = BeautifulSoup(response.text, "html.parser")
-            iframe = soup.find("iframe")
+st.subheader(partido["partido"])
 
-            if iframe:
-                video_url = iframe.get("src")
-                st.markdown(f"""
-                    <iframe src="{video_url}" width="100%" height="600"
-                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                        allowfullscreen></iframe>
-                """, unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ No se encontró iframe con el video.")
+if not partido["canales"]:
+    st.write("⚠️ No hay canales disponibles.")
+else:
+    canal_seleccionado = st.radio(
+        "Elige un canal:",
+        options=[c["nombre"] for c in partido["canales"]],
+        key=f"canales_{partido['partido']}"
+    )
+
+    if canal_seleccionado:
+        canal_url = next(c["url"] for c in partido["canales"] if c["nombre"] == canal_seleccionado)
+        
+        # Scraping del enlace del canal
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(canal_url, headers=headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+        iframe = soup.find("iframe")
+
+        if iframe:
+            video_url = iframe.get("src")
+            st.markdown(f"""
+                <iframe src="{video_url}" width="100%" height="600"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                    allowfullscreen></iframe>
+            """, unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ No se encontró iframe con el video.")
