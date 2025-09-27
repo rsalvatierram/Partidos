@@ -21,7 +21,7 @@ def obtener_partidos():
         partido_info = {"partido": titulo_link.get_text(" ", strip=True), "canales": []}
 
         canales_links = li.select("ul li a")
-        for canal in canales_links[1:]:  # 🔥 omitir el primero (repite el título)
+        for canal in canales_links[1:]:  # omitir el primero (repite el título)
             partido_info["canales"].append({
                 "nombre": canal.get_text(strip=True),
                 "url": canal.get("href")
@@ -35,7 +35,8 @@ def obtener_partidos():
 # INTERFAZ STREAMLIT
 # ========================
 
-st.title("📺 Partidos y Canales")
+st.set_page_config(page_title="📺 Partidos en Vivo", layout="wide")
+st.markdown("<h1 style='text-align:center; color:#FF5733;'>📺 Partidos y Canales en Vivo</h1>", unsafe_allow_html=True)
 
 # Inicializar estado
 if "partido_abierto" not in st.session_state:
@@ -45,32 +46,61 @@ if "canal_abierto" not in st.session_state:
 
 partidos = obtener_partidos()
 
+# Estilos CSS para los botones y contenedores
+st.markdown("""
+<style>
+.partido-btn {
+    width: 100%;
+    text-align: left;
+    font-size: 18px;
+    background-color: #FFC300;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+.canal-btn {
+    width: 95%;
+    text-align: left;
+    font-size: 16px;
+    background-color: #DAF7A6;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 3px;
+    cursor: pointer;
+}
+</style>
+""", unsafe_allow_html=True)
+
 for p in partidos:
     # Botón del partido
     if st.button(f"⚽ {p['partido']}", key=f"partido_{p['partido']}"):
-        # Si ya estaba abierto, cerrar todo; si no, abrir este partido
         if st.session_state.partido_abierto == p["partido"]:
             st.session_state.partido_abierto = None
             st.session_state.canal_abierto = None
         else:
             st.session_state.partido_abierto = p["partido"]
-            st.session_state.canal_abierto = None  # cerrar canal anterior
+            st.session_state.canal_abierto = None
 
     # Mostrar los canales SOLO si este partido está abierto
     if st.session_state.partido_abierto == p["partido"]:
-        st.subheader(f"Canales de {p['partido']}")
+        st.markdown(f"<div style='background-color:#f0f0f0; padding:10px; border-radius:10px; margin-bottom:15px;'>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='color:#FF5733;'>Canales de {p['partido']}</h4>", unsafe_allow_html=True)
 
         if not p["canales"]:
             st.write("⚠️ No hay canales disponibles.")
         else:
             for c in p["canales"]:
                 if st.button(f"▶️ {c['nombre']}", key=f"canal_{p['partido']}_{c['nombre']}"):
-                    st.session_state.canal_abierto = c  # guardar canal abierto
+                    st.session_state.canal_abierto = c
 
             # Mostrar iframe del canal abierto
             if st.session_state.canal_abierto:
                 canal = st.session_state.canal_abierto
-                # Obtener el iframe del canal
                 headers = {"User-Agent": "Mozilla/5.0"}
                 response = requests.get(canal["url"], headers=headers)
                 soup = BeautifulSoup(response.text, "html.parser")
@@ -80,7 +110,8 @@ for p in partidos:
                     st.markdown(f"""
                         <iframe src="{video_url}" width="100%" height="600"
                             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                            allowfullscreen></iframe>
+                            allowfullscreen style="border:2px solid #FF5733; border-radius:10px;"></iframe>
                     """, unsafe_allow_html=True)
                 else:
                     st.warning("⚠️ No se encontró iframe con el video.")
+        st.markdown("</div>", unsafe_allow_html=True)
